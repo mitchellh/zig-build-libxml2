@@ -13,3 +13,8 @@ git clone https://github.com/GNOME/libxml2.git $out
 git -C $out checkout $ref
 git -C $out rev-parse HEAD > ${out}.txt
 rm -rf $out/.git
+
+# Lower file size
+rm -rf $out/doc
+rm -rf $out/result
+rm -rf $out/test
