@@ -1,0 +1,26 @@
+name: Build
+on:
+  - push
+  - pull_request
+jobs:
+  x86_64-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - uses: cachix/install-nix-action@v22
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - run: nix flake check
+    - run: nix develop -c zig build
+
+  x86_64-macos:
+    runs-on: macos-12
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - uses: cachix/install-nix-action@v22
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - run: nix flake check
+    - run: nix develop -c zig build
