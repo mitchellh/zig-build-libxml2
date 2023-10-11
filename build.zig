@@ -13,7 +13,7 @@ pub fn build(b: *std.Build) !void {
 
     lib.addIncludePath(.{ .path = "upstream/include" });
     lib.addIncludePath(.{ .path = "override/include" });
-    if (target.isWindows()) {
+    if (target.result.os.tag == .windows) {
         lib.addIncludePath(.{ .path = "override/config/win32" });
         lib.linkSystemLibrary("ws2_32");
     } else {
@@ -40,7 +40,7 @@ pub fn build(b: *std.Build) !void {
         "-DLIBXML_AUTOMATA_ENABLED=1",
         "-DWITHOUT_TRIO=1",
     });
-    if (!target.isWindows()) {
+    if (target.result.os.tag != .windows) {
         try flags.appendSlice(&.{
             "-DHAVE_ARPA_INET_H=1",
             "-DHAVE_ARPA_NAMESER_H=1",
@@ -92,7 +92,7 @@ pub fn build(b: *std.Build) !void {
         }
     }
 
-    lib.addCSourceFiles(srcs, flags.items);
+    lib.addCSourceFiles(.{ .files = srcs, .flags = flags.items });
     lib.installHeader("override/include/libxml/xmlversion.h", "libxml/xmlversion.h");
     lib.installHeadersDirectory("upstream/include/libxml", "libxml");
 
