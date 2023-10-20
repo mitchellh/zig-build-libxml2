@@ -92,7 +92,7 @@ pub fn build(b: *std.Build) !void {
         }
     }
 
-    lib.addCSourceFiles(srcs, flags.items);
+    lib.addCSourceFiles(.{ .files = srcs, .flags = flags.items });
     lib.installHeader("override/include/libxml/xmlversion.h", "libxml/xmlversion.h");
     lib.installHeadersDirectory("upstream/include/libxml", "libxml");
 
