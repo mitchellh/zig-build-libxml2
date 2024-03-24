@@ -4,6 +4,8 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const upstream = b.dependency("libxml2", .{});
+
     const lib = b.addStaticLibrary(.{
         .name = "xml2",
         .target = target,
@@ -11,9 +13,9 @@ pub fn build(b: *std.Build) !void {
     });
     lib.linkLibC();
 
-    lib.addIncludePath(.{ .path = "upstream/include" });
+    lib.addIncludePath(upstream.path("include"));
     lib.addIncludePath(.{ .path = "override/include" });
-    if (target.isWindows()) {
+    if (target.result.os.tag == .windows) {
         lib.addIncludePath(.{ .path = "override/config/win32" });
         lib.linkSystemLibrary("ws2_32");
     } else {
@@ -40,7 +42,7 @@ pub fn build(b: *std.Build) !void {
         "-DLIBXML_AUTOMATA_ENABLED=1",
         "-DWITHOUT_TRIO=1",
     });
-    if (!target.isWindows()) {
+    if (target.result.os.tag != .windows) {
         try flags.appendSlice(&.{
             "-DHAVE_ARPA_INET_H=1",
             "-DHAVE_ARPA_NAMESER_H=1",
@@ -92,9 +94,17 @@ pub fn build(b: *std.Build) !void {
         }
     }
 
-    lib.addCSourceFiles(srcs, flags.items);
+    lib.addCSourceFiles(.{
+        .root = upstream.path(""),
+        .files = srcs,
+        .flags = flags.items,
+    });
     lib.installHeader("override/include/libxml/xmlversion.h", "libxml/xmlversion.h");
-    lib.installHeadersDirectory("upstream/include/libxml", "libxml");
+    lib.installHeadersDirectoryOptions(.{
+        .source_dir = upstream.path("include/libxml"),
+        .install_dir = .header,
+        .install_subdir = "libxml",
+    });
 
     b.installArtifact(lib);
 }
@@ -103,8 +113,8 @@ pub fn build(b: *std.Build) !void {
 /// in the future we will parse this from configure.ac.
 pub const Version = struct {
     pub const major = "2";
-    pub const minor = "9";
-    pub const micro = "12";
+    pub const minor = "11";
+    pub const micro = "5";
 
     pub fn number() []const u8 {
         return comptime major ++ "0" ++ minor ++ "0" ++ micro;
@@ -161,48 +171,48 @@ const Options = struct {
 };
 
 const srcs = &.{
-    "upstream/buf.c",
-    "upstream/c14n.c",
-    "upstream/catalog.c",
-    "upstream/chvalid.c",
-    "upstream/debugXML.c",
-    "upstream/dict.c",
-    "upstream/encoding.c",
-    "upstream/entities.c",
-    "upstream/error.c",
-    "upstream/globals.c",
-    "upstream/hash.c",
-    "upstream/HTMLparser.c",
-    "upstream/HTMLtree.c",
-    "upstream/legacy.c",
-    "upstream/list.c",
-    "upstream/nanoftp.c",
-    "upstream/nanohttp.c",
-    "upstream/parser.c",
-    "upstream/parserInternals.c",
-    "upstream/pattern.c",
-    "upstream/relaxng.c",
-    "upstream/SAX.c",
-    "upstream/SAX2.c",
-    "upstream/schematron.c",
-    "upstream/threads.c",
-    "upstream/tree.c",
-    "upstream/uri.c",
-    "upstream/valid.c",
-    "upstream/xinclude.c",
-    "upstream/xlink.c",
-    "upstream/xmlIO.c",
-    "upstream/xmlmemory.c",
-    "upstream/xmlmodule.c",
-    "upstream/xmlreader.c",
-    "upstream/xmlregexp.c",
-    "upstream/xmlsave.c",
-    "upstream/xmlschemas.c",
-    "upstream/xmlschemastypes.c",
-    "upstream/xmlstring.c",
-    "upstream/xmlunicode.c",
-    "upstream/xmlwriter.c",
-    "upstream/xpath.c",
-    "upstream/xpointer.c",
-    "upstream/xzlib.c",
+    "buf.c",
+    "c14n.c",
+    "catalog.c",
+    "chvalid.c",
+    "debugXML.c",
+    "dict.c",
+    "encoding.c",
+    "entities.c",
+    "error.c",
+    "globals.c",
+    "hash.c",
+    "HTMLparser.c",
+    "HTMLtree.c",
+    "legacy.c",
+    "list.c",
+    "nanoftp.c",
+    "nanohttp.c",
+    "parser.c",
+    "parserInternals.c",
+    "pattern.c",
+    "relaxng.c",
+    "SAX.c",
+    "SAX2.c",
+    "schematron.c",
+    "threads.c",
+    "tree.c",
+    "uri.c",
+    "valid.c",
+    "xinclude.c",
+    "xlink.c",
+    "xmlIO.c",
+    "xmlmemory.c",
+    "xmlmodule.c",
+    "xmlreader.c",
+    "xmlregexp.c",
+    "xmlsave.c",
+    "xmlschemas.c",
+    "xmlschemastypes.c",
+    "xmlstring.c",
+    "xmlunicode.c",
+    "xmlwriter.c",
+    "xpath.c",
+    "xpointer.c",
+    "xzlib.c",
 };
